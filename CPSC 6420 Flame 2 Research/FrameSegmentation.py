@@ -33,7 +33,6 @@ for output_dir in [output_dir_RGB, output_dir_IR]:
         shutil.rmtree(output_dir)  
     os.makedirs(output_dir)
 
-frame_index = 0
 frame_count = 1
 video_index = 0
 
