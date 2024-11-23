@@ -51,6 +51,10 @@ class WildfireEnv(gym.Env):
 
     def calculate_reward(self, action, ir_frame, next_ir_frame, rgb_frame, next_rgb_frame):
         actual_vector = self.estimate_actual_direction(ir_frame, next_ir_frame, rgb_frame, next_rgb_frame)
+        
+        if np.linalg.norm(actual_vector) == 0:
+            penalty = -np.linalg.norm(action)
+            return penalty
 
         norm_action = action / (np.linalg.norm(action) + 1e-6)
         norm_actual = actual_vector / (np.linalg.norm(actual_vector) + 1e-6)
@@ -99,7 +103,7 @@ class WildfireEnv(gym.Env):
         
         plt.subplot(1, 2, 2)
         plt.imshow(cv2.cvtColor(next_frame_with_overlay, cv2.COLOR_BGR2RGB))
-        plt.title("Next Frame with Movement Vector")
+        plt.title("Next Frame")
         plt.axis("off")
         
         plt.show()
@@ -114,6 +118,7 @@ class WildfireEnv(gym.Env):
         if ir_frame.shape != next_ir_frame.shape:
             next_ir_frame = cv2.resize(next_ir_frame, (ir_frame.shape[1], ir_frame.shape[0]))
         
+        #Threshold detects where fire is
         threshold = ir_frame.mean() + 0.5 * ir_frame.std()
 
         fire_mask = (ir_frame > threshold).astype(np.uint8)
@@ -123,9 +128,10 @@ class WildfireEnv(gym.Env):
         next_center = center_of_mass(next_fire_mask)
         
         #If no fire
-        if previous_center is None or next_center is None:
+        if np.sum(fire_mask) == 0 or previous_center is None or next_center is None:
             return np.array([0.0, 0.0])
 
+        #Finds direction based on the change in center of masses
         com_direction_vector = np.array(next_center) - np.array(previous_center)
         
         flow = cv2.calcOpticalFlowFarneback(
