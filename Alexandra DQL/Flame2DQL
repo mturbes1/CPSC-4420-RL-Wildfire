@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[19]:
+# In[15]:
 
 
 # Import required libraries
@@ -17,7 +17,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import Huber
 
 
-# In[20]:
+# In[16]:
 
 
 # Define dataset paths
@@ -25,7 +25,7 @@ rgb_frames_dir = "Segmented Frames/RGB"
 ir_frames_dir = "Segmented Frames/IR"
 
 
-# In[21]:
+# In[17]:
 
 
 # Define the WildfireEnvironment class
@@ -148,7 +148,7 @@ class WildfireEnvironment:
         return 0  # Default: No spread
 
 
-# In[22]:
+# In[18]:
 
 
 # List all video subfolders
@@ -163,7 +163,7 @@ train_env = WildfireEnvironment(rgb_frames_dir, ir_frames_dir, video_subset=trai
 test_env = WildfireEnvironment(rgb_frames_dir, ir_frames_dir, video_subset=test_videos)
 
 
-# In[23]:
+# In[19]:
 
 
 # Define the DQNAgent class
@@ -253,14 +253,14 @@ def train_dqn(train_env, episodes=50, batch_size=32):
     return agent
 
 
-# In[ ]:
+# In[25]:
 
 
 # Train the DQN agent on the training set
 dqn_agent = train_dqn(train_env, episodes=50, batch_size=32)
 
 
-# In[11]:
+# In[20]:
 
 
 #Testing the agent
@@ -275,24 +275,27 @@ test_env = WildfireEnvironment(rgb_frames_dir, ir_frames_dir)
 trained_model = load_model('dqn_model_episode_final.h5')
 
 # Test the trained agent on the test set
-def test_dqn(agent, env):
-    state = env.reset()
-    total_reward = 0
-    while True:
-        action = np.argmax(agent.predict(state[np.newaxis], verbose=0))  # Use greedy policy
-        next_state, reward, done = env.step(action)
-        total_reward += reward
-        state = next_state
-        if done:
+def test_dqn(agent, env, episodes=5):
+    total_rewards = []
+
+    for e in range(episodes): # Loop over the number of episodes
+        state = env.reset()
+        total_reward = 0
+        while True:
+            action = np.argmax(agent.predict(state[np.newaxis], verbose=0))  # Use greedy policy
+            next_state, reward, done = env.step(action)
+            total_reward += reward
+            state = next_state
             if done:
-                print(f"Episode {e + 1}/{episodes} - Total Reward: {total_reward}")
-                total_rewards.append(total_reward)
-                break
+                if done:
+                    print(f"Episode {e + 1}/{episodes} - Total Reward: {total_reward}")
+                    total_rewards.append(total_reward)
+                    break
     
     print(f"Average Reward over {episodes} test episodes: {np.mean(total_rewards)}")
 
 
-# In[ ]:
+# In[21]:
 
 
 # Test the trained model
